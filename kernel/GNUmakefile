@@ -7,13 +7,14 @@ override LIMINECFG := limine.cfg
 override GDBCFG := debug.gdb
 override VMNAME := bloodmoon
 override WDIR := bloodmoondata
+override WINUSER := adrian
 
 # It is highly recommended to use a custom built cross toolchain to build a kernel.
 # We are only using "cc" as a placeholder here. It may work by using
 # the host system's toolchain, but this is not guaranteed.
 
-CC := /usr/bin/cc
-LD := /usr/bin/ld
+CC := /usr/bin/riscv64-unknown-elf-gcc
+LD := /usr/bin/riscv64-unknown-elf-ld
 LMN := limine/limine-deploy.exe
 BOOTEFI := ./limine/BOOTX64.EFI
 ASMC := nasm
@@ -25,7 +26,7 @@ JAIL = 4096M # This is in case qemu crashes windows!
 #GDB := "/mnt/c/Users/85562/crossgdb/gdb-12.1/gdb/gdb"
 #WSLHOSTIP := $(shell ipconfig.exe | grep 'WSL' -a -A4 | tail -n1 | cut -d":" -f 2 | tail -n1 | sed -e 's/\s*//g')
 #########################LAPTOP SETTINGS###################################
-QEMU := qemu-system-x86_64
+QEMU := qemu-system-riscv64
 GDB := gdb
 WSLHOSTIP := 127.0.0.1
 ###########################################################################
@@ -60,8 +61,8 @@ NUMAFLAGS := \
 #-numa dist,src=1,dst=2,val=20 \
 #-numa dist,src=1,dst=3,val=20
 
-QFLAGS ?= -cpu qemu64 -d cpu_reset -no-reboot -no-shutdown -machine q35 $(NUMAFLAGS) -m $(MEMSIZE) -boot d -serial stdio -serial telnet::4444,server,nowait -cdrom 
-QFLAGSEXP ?= -cpu qemu64 -d cpu_reset -no-reboot -no-shutdown -machine q35 $(NUMAFLAGS) -m $(MEMSIZE) -boot d -serial stdio -drive if=pflash,format=raw,unit=0,file=./OVMFbin/OVMF_CODE-pure-efi.fd,readonly=on -drive if=pflash,format=raw,unit=1,file=./OVMFbin/OVMF_VARS-pure-efi.fd -drive file=
+QFLAGS ?=  -d cpu_reset -no-reboot -no-shutdown -machine virt $(NUMAFLAGS) -m $(MEMSIZE) -boot d -serial stdio -serial telnet::4444,server,nowait -cdrom 
+QFLAGSEXP ?= -d cpu_reset -no-reboot -no-shutdown -machine virt $(NUMAFLAGS) -m $(MEMSIZE) -boot d -serial stdio -drive if=pflash,format=raw,unit=0,file=./OVMFbin/OVMF_CODE-pure-efi.fd,readonly=on -drive if=pflash,format=raw,unit=1,file=./OVMFbin/OVMF_VARS-pure-efi.fd -drive file=
 #QWFLAGSEXP ?= -cpu qemu64 -d cpu_reset -machine q35 $(NUMAFLAGS) -m $(MEMSIZE) -boot d -netdev tap,id=mynet0,ifname=tap,script=no,downscript=no -serial stdio -device e1000,netdev=mynet0,mac=51:52:53:54:55:56 -drive if=pflash,format=raw,unit=0,file=$(WINDIRECTORY)/OVMF_CODE-pure-efi.fd,readonly=on -drive if=pflash,format=raw,unit=1,file=$(WINDIRECTORY)/OVMF_VARS-pure-efi.fd -drive file=
 
 CFLAGS ?= -O3 -g -Wall -Wextra -pipe -Wno-packed-bitfield-compat -std=c11
@@ -114,12 +115,9 @@ override CFLAGS +=       \
     -ffreestanding       \
     -fno-pie             \
     -fno-pic             \
-    -m64                 \
-    -march=x86-64        \
-    -mabi=sysv           \
-    -mno-80387           \
-    -mno-red-zone        \
-    -mcmodel=kernel      \
+    -march=rv64gc        \
+    -mabi=lp64d          \
+    -mcmodel=medany      \
     -MMD
 
 override LDFLAGS +=         \
@@ -240,7 +238,7 @@ clean:
 
 override EX_RIP = 'x/1ig $$rip'
 setup:
-	$(eval WINUSER := $(shell cmd.exe /c 'for %a in (%userprofile%) do (echo %~nxa)' | tail -1 | tr -d ' '))
+	# $(eval WINUSER := $(shell cmd.exe /c 'for %a in (%userprofile%) do (echo %~nxa)' | tail -1 | tr -d ' '))
 	@mkdir -p $(BUILDDIR)
 	@mkdir -p $(OBJDIR)
 	@mkdir -p $(ISOBUILDDIR)

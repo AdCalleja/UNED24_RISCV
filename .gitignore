@@ -1,0 +1,4 @@
+build/
+limine/
+debug.gdb
+.vscode/
