@@ -2,3 +2,4 @@ build/
 limine/
 debug.gdb
 .vscode/
+gdb_riscv/
