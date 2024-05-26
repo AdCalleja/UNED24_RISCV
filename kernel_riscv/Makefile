@@ -68,7 +68,7 @@ setup:
 	@git clone $(LMNREPO) --branch=$(LMNBRCH) --depth=1
 	@cp -v $(LMNDIR)/limine.sys $(LMNDIR)/limine-cd.bin $(LMNDIR)/limine-cd-efi.bin $(ISOBUILDDIR)
 # Formateo de la BIOS para que no de error: dd if=/dev/zero of=./OVMFbin/OVMF_riscv_virt.fd bs=1 count=0 seek=33554432
-
+# Crear Limine-cd-efi.bin: cd limine && make
 cleansetup:
 	@rm -rf $(ISOBUILDDIR)
 	@rm -rf $(LMNDIR)
