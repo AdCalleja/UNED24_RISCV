@@ -1,3 +1,4 @@
+OUTPUT_FORMAT(elf64-littleriscv)
 /* Entry symbol is _start */
 ENTRY(_start)
 

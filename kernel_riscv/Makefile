@@ -53,9 +53,13 @@ link: uart kernel
 
 uart:
 	$(CC) -c src/drivers/uart/uart.c $(CFLAGS) -o uart.o
+	
+bootservices:
+	$(CC) -c src/bootservices/bootservices.c $(CFLAGS) -o bootservices.o
 
 kernel:
 	$(CC) -c src/kernel.c $(CFLAGS) -o kernel.o
+	
 
 setup:
 	@mkdir -p $(BUILDDIR)
