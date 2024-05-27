@@ -25,7 +25,7 @@ LMNREPO := https://github.com/limine-bootloader/limine.git
 LMNBRCH := v3.0-branch-binary
 LIMINECFG := limine.cfg
 LMN := limine/limine-deploy
-IMG_RAW := raw.img
+OVMF_FILE := OVMF_riscv_virt.fd
 
 # QEMU
 QEMU=qemu-system-riscv64
@@ -63,10 +63,10 @@ setup:
 	@mkdir -p $(ISOBUILDDIR)
 	@mkdir -p $(PROGSBUILDDIR)
 	@mkdir -p $(ISODIR)
-	@dd if=/dev/zero of=$(ISODIR)/$(IMG_RAW) bs=4096 count=102400
-	@dd if=/dev/zero of=$(OVMF_FILE) bs=1 count=0 seek=33554432
+	@dd if=/dev/zero of=./OVMFbin/OVMF_riscv_virt.fd bs=1 count=0 seek=33554432
 	@git clone $(LMNREPO) --branch=$(LMNBRCH) --depth=1
 	@cp -v $(LMNDIR)/limine.sys $(LMNDIR)/limine-cd.bin $(LMNDIR)/limine-cd-efi.bin $(ISOBUILDDIR)
+	@cd limine && make
 # Formateo de la BIOS para que no de error: dd if=/dev/zero of=./OVMFbin/OVMF_riscv_virt.fd bs=1 count=0 seek=33554432
 # Crear Limine-cd-efi.bin: cd limine && make
 cleansetup:
