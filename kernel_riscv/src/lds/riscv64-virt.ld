@@ -1,50 +1,69 @@
 OUTPUT_FORMAT(elf64-littleriscv)
-/* Entry symbol is _start */
+
 ENTRY(_start)
 
-/* RAM starts at 0x80000000 - see misc/riscv64-virt.dts for details */
-. = 0x80000000;
+PHDRS
+{
+    text        PT_LOAD     FLAGS((1 << 0) | (1 << 2));
+    rodata      PT_LOAD     FLAGS((1 << 2));
+    data        PT_LOAD     FLAGS((1 << 1) | (1 << 2));
+    dynamic     PT_DYNAMIC  FLAGS((1 << 1) | (1 << 2));
+}
 
-SECTIONS {
-  /**
-   * ELF file layout: text section at bottom, followed by data and bss
-   * sections
-   *
-   * Global pointer starts where BSS ends
-   * The heap also starts right after the BSS section, growing upwards
-   * The stack grows downwards, starting from the end of RAM
-   * This mean there's a chance stack and heap collide, but we'll assume
-   * it never happens
-   */
-  .init : ALIGN(4K) {
-    PROVIDE(__init_start = .);
-    *(.init);
-    PROVIDE(__init_end = .);
-  }
-  .text : ALIGN(4K) {
-    PROVIDE(__text_start = .);
-    *(.text);
-    PROVIDE(__text_end = .);
-  }
-  .rodata : ALIGN(4K) {
-    PROVIDE(__rodata_start = .);
-    *(.rodata);
-    PROVIDE(__rodata_end = .);
-  }
-  .data : ALIGN(4K) {
-    PROVIDE(__data_start = .);
-    *(.data);
-    PROVIDE(__data_end = .);
-  }
-  .bss : ALIGN(4K) {
-    PROVIDE(__bss_start = .);
-    *(.bss);
-    PROVIDE(__bss_end = .);
-  }
-  PROVIDE(__global_pointer = .);
-  PROVIDE(__heap_start = .);
-  . = 0x88000000;
-  PROVIDE(__kernel_stack_start = . - 0x80000);
-  PROVIDE(__kernel_stack_end = .);
-  PROVIDE(__heap_size = __kernel_stack_start - __heap_start);
+SECTIONS
+{
+    . = 0x80000000;
+    KERNEL_BLOB_BEGIN = .;
+
+    KERNEL_TEXT_BEGIN = .;
+    .text :
+    {
+        *(.text)
+        *(.text.*)
+    } :text
+    KERNEL_TEXT_SIZE = . - KERNEL_TEXT_BEGIN;
+
+    . += CONSTANT(MAXPAGESIZE);
+
+    KERNEL_RODATA_BEGIN = .;
+    .rodata : 
+    {
+        *(.rodata)
+        *(.rodata.*)
+    } :rodata
+
+    .limine_reqs :
+    {
+        KEEP(*(.limine_reqs))
+    } :rodata
+    KERNEL_RODATA_SIZE = . - KERNEL_RODATA_BEGIN;
+
+    . += CONSTANT(MAXPAGESIZE);
+
+    KERNEL_DATA_BEGIN = .;
+    .data : 
+    {
+        *(.data)
+        *(.data.*)
+    } :data
+
+    .dynamic :
+    {
+        *(.dynamic)
+    } :data :dynamic
+
+    .bss :
+    {
+        *(COMMON)
+        *(.bss)
+    } :data
+
+    /DISCARD/ :
+    {
+        *(.note)
+        *(.note.*)
+    }
+    KERNEL_DATA_SIZE = . - KERNEL_DATA_BEGIN;
+
+    KERNEL_BLOB_SIZE = . - KERNEL_BLOB_BEGIN;
 }

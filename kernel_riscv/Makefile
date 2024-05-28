@@ -30,13 +30,13 @@ OVMF_FILE := OVMF_riscv_virt.fd
 # QEMU
 QEMU=qemu-system-riscv64
 QFLAGS = -machine virt \
-	-cpu rv64 -smp 4 -m 512M \
+	-cpu rv64 -m 512M \
 	-drive id=cd0,format=raw,file=$(ISODIR)/$(ISO) \
 	-drive if=pflash,format=raw,file=./OVMFbin/OVMF_riscv_virt.fd,readonly=on,unit=1 \
 	#-serial mon:stdio \
 	-device ramfb -device qemu-xhci -device usb-kbd \
 	-device virtio-scsi-pci,id=scsi -device scsi-cd,drive=cd0 \
-	#-M aia=aplic-imsic 
+	#-M aia=aplic-imsic -smp 4 # esto usa 4 núcleos
 MACH=virt
 RUN=$(QEMU) $(QFLAGS) #-nographic 
 
@@ -48,8 +48,9 @@ GDBFLAGS ?=  --nx --command=debug.gdb
 # Format
 INDENT_FLAGS=-linux -brf -i2
 
-link: uart kernel
-	$(CC) *.o $(RUNTIME) $(CFLAGS) -T $(LINKER_SCRIPT) -o $(BUILDDIR)/$(KERNEL)
+link: uart kernel bootservices
+# $(CC) *.o $(RUNTIME) $(CFLAGS) -T $(LINKER_SCRIPT) -o $(BUILDDIR)/$(KERNEL)
+	$(CC) *.o $(CFLAGS) -T $(LINKER_SCRIPT) -o $(BUILDDIR)/$(KERNEL)
 
 uart:
 	$(CC) -c src/drivers/uart/uart.c $(CFLAGS) -o uart.o
@@ -107,6 +108,9 @@ run: buildimg
 # target extended-remote localhost:1234
 debug: buildimg
 	$(RUN) -s -S
+
+gdb: 
+	riscv64-elf-gdb --nx --command=debug.gdb
 
 clean:
 	rm -vf *.o
